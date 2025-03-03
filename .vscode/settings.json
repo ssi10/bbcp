@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "bbcp_FileSpec.C": "cpp",
+        "bbcp_FileSystem.C": "cpp",
+        "bbcp_FS_Unix.C": "cpp"
+    }
+}

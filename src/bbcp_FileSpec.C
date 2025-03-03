@@ -55,9 +55,9 @@ extern bbcp_Config   bbcp_Cfg;
 
 // <seqno> <fnode> <inode> <mode> <size> <acctime> <modtime> <group> <fname>
 //
-#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s%s%s\n"
-#define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %2054s"
-#define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %2054s"
+#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s %s%s%s\n"
+#define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %31s %2054s"
+#define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %31s %2054s"
 
 #define SpaceAlt 0x1a
 
@@ -296,9 +296,15 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
    if (Info.Group) free(Info.Group);
    Info.Group = strdup(gnbuff);
 
-// Apply space conversion to the group name
+   // Apply space conversion to the group name
 //
    while((Space = index(Info.Group, SpaceAlt))) *Space++ = ' ';
+
+   // Handle user name similarly to group name
+   if (Info.User) free(Info.User);
+   Info.User = strdup(gnbuff);
+   Space = Info.User;
+   while((Space = index(Space, SpaceAlt))) *Space++ = ' ';
 
 // Check if we need to reconvert the file specification by replacing alternate
 // space characters with actual spaces.
@@ -323,7 +329,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 {
    static const char UprCase = 0xdf;
    const char *slSep, *slXeq;
-   char grpBuff[64], *Space, *theGrp, Otype = Info.Otype;
+   char grpBuff[64], usrBuff[64], *Space, *theGrp, *theUsr;
    long long theSize;
    bool isSL = Info.SLink != 0;
    int n;
@@ -355,6 +361,15 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
        theGrp = grpBuff;
       } else theGrp = Info.Group;
 
+// Convert spaces in the user name to an alternate character
+//
+   if ((Space = index(Info.User, ' ')))
+      {strncpy(usrBuff, Info.User, sizeof(usrBuff)-1);
+       usrBuff[sizeof(usrBuff)-1] = 0;
+       while((Space = index(usrBuff, ' '))) *Space++ = SpaceAlt;
+       theUsr = usrBuff;
+      } else theUsr = Info.User;
+
 // Prepare for format
 //
    if (isSL) {slXeq = Info.SLink; slSep = ":"; theSize = strlen(filereqn);}
@@ -364,7 +379,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 //
    n = snprintf(buff, blen, bbcp_ENFMT, seqno, Otype, Info.fileid,
                 Info.mode, theSize, Info.atime, Info.mtime, theGrp,
-                filereqn, slSep, slXeq);
+                filereqn, theUsr, slSep, slXeq);
 
 // Make sure all went well
 //
@@ -419,6 +434,7 @@ bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
       //
       if (fInfo.SLink) {free(fInfo.SLink); fInfo.SLink = 0;}
       if (fInfo.Group) {free(fInfo.Group); fInfo.Group = 0;}
+      if (fInfo.User) {free(fInfo.User); fInfo.User = 0;}
 
       // Ignore entries we can't stat for any reason
       //
@@ -466,7 +482,7 @@ bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
       newp->pathname = strdup(absolute_name);
       newp->targetsz = 0;
       newp->seqno = lastp->seqno + 1;
-      newp->Info = fInfo; fInfo.Group = 0; fInfo.SLink = 0;
+      newp->Info = fInfo; fInfo.Group = 0; fInfo.SLink = 0; fInfo.User = 0;
       newp->FSp = FSp;
       newp->next = NULL;
       lastp->next = newp;
