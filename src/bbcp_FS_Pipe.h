@@ -53,6 +53,8 @@ int        RM(const char *path) {return 0;}
 
 int        setGroup(const char *path, const char *Group) {return 0;}
 
+int        setUser(const char *path, const char *User) {return 0;}
+
 int        setMode(const char *path, mode_t mode) {return 0;}
 
 int        setTimes(const char *path, time_t atime, time_t mtime) {return 0;}
