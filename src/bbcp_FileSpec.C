@@ -623,6 +623,11 @@ int bbcp_FileSpec::setStat(mode_t Mode)
    if (!(bbcp_Cfg.Options & bbcp_PTONLY) && Info.Group)
       FSp->setGroup (targpath, Info.Group);
 
+// Set the user only if this is a plain preserve
+//
+   if (!(bbcp_Cfg.Options & bbcp_PTONLY) && Info.User)
+      FSp->setUser (targpath, Info.User);
+
 // Check if any errors occured (we ignore these just like cp/scp does)
 //
    if (act) bbcp_Emsg("setStat", -retc, act, targpath);

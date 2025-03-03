@@ -35,7 +35,7 @@
    AIX: -D_THREAD_SAFE
    SUN: -D_REENTRANT
 */
-  
+
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -147,12 +147,10 @@ bbcp_Config::bbcp_Config()
    Complvl   = 1;
    Progint   = 0;
    RWBsz     = 0;
-// SrcXeq    = strdup("ssh -x -a -oFallBackToRsh=no -oServerAliveInterval=10 "
    SrcXeq    = strdup("ssh -x -a -oFallBackToRsh=no "
-                      "%4 %I -l %U %H bbcp");
-// SnkXeq    = strdup("ssh -x -a -oFallBackToRsh=no -oServerAliveInterval=10 "
+                      "%4 %I -l %U %H fmbbcp");
    SnkXeq    = strdup("ssh -x -a -oFallBackToRsh=no "
-                      "%4 %I -l %U %H bbcp");
+                      "%4 %I -l %U %H fmbbcp");
    Logurl    = 0;
    Logfn     = 0;
    MLog      = 0;
@@ -243,6 +241,8 @@ bbcp_Config::~bbcp_Config()
 #define Hmsg1(a)   {bbcp_Fmsg("Config", a);    help(1);}
 #define Hmsg2(a,b) {bbcp_Fmsg("Config", a, b); help(1);}
 
+/******************************************************************************/
+/*                            A r g u m e n t s                              */
 /******************************************************************************/
 
 void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
@@ -423,8 +423,8 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
                       if (!strcmp("d", arglist.argval)) Options |= bbcp_FSYNC;
                  else if (!strcmp("dd",arglist.argval)) Options |= bbcp_DSYNC;
                  else{bbcp_Fmsg("Config","Invalid sync option -",arglist.argval);
-                      Cleanup(1, argv[0], cfgfd);
-                     }
+                    Cleanup(1, argv[0], cfgfd);
+                 }
                  SynSpec = strdup(arglist.argval);
                  break;
        case 'z': Options |= bbcp_CON2SRC;
@@ -737,7 +737,7 @@ H("        i -> input pipe or program, o -> output pipe or program")
 H("-s snum number of network streams to use (default is 4).")
 H("-o      enforces output ordering (writes in ascending offset order).")
 H("-O      omits files that already exist at the target node (useful with -r).")
-H("-p      preserve source mode, ownership, and dates.")
+H("-p      preserve source mode, ownership (UID and GID), and dates.")
 H("-P sec  produce a progress message every sec seconds (15 sec minimum).")
 H("-q lvl  specifies the quality of service for routers that support QOS.")
 H("-r      copy subdirectories and their contents (actual files only).")
@@ -874,7 +874,7 @@ int bbcp_Config::Configure(const char *cfgFN)
 /******************************************************************************/
 /*                               D i s p l a y                                */
 /******************************************************************************/
-  
+
 void bbcp_Config::Display()
 {
 

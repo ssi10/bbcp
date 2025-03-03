@@ -57,6 +57,8 @@ int        RM(const char *path);
 
 int        setGroup(const char *path, const char *Group);
 
+int        setUser(const char *path, const char *User);
+
 int        setMode(const char *path, mode_t mode);
 
 int        setTimes(const char *path, time_t atime, time_t mtime);

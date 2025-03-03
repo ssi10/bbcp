@@ -42,12 +42,14 @@ struct bbcp_FileInfo
        time_t    mtime;     // Modification time
        time_t    ctime;     // Create time
        char     *Group;     // -> Group name
+       char     *User;      // -> User name
        char     *SLink;     // -> Symlink contents
        char      Otype;     // 'd' | 'f' | 'l' | 'p' | '?'
        char      Xtype;     // 'x' | 0
 
-       bbcp_FileInfo() : Group(0), SLink(0), Otype('?'), Xtype(0) {}
+       bbcp_FileInfo() : Group(0), User(0), SLink(0), Otype('?'), Xtype(0) {}
       ~bbcp_FileInfo() {if (Group) free(Group);
+                        if (User) free(User);
                         if (SLink) free(SLink);
                        }
 };
