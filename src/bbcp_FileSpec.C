@@ -340,7 +340,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 // operation.
 //
    if ((Space = index(filename, ' ')))
-      {filereqn = fspec2 = strdup(filename); Otype &= UprCase;
+      {filereqn = fspec2 = strdup(filename); Info.Otype &= UprCase;
        Space = filereqn + (Space - filename);
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
@@ -348,7 +348,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 // If we have symlink data then we need to encode spaces there as well
 //
    if (isSL && (Space = index(Info.SLink, ' ')))
-      {Otype &= UprCase;
+      {Info.Otype &= UprCase;
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
 
@@ -377,7 +377,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 
 // Format the specification
 //
-   n = snprintf(buff, blen, bbcp_ENFMT, seqno, Otype, Info.fileid,
+   n = snprintf(buff, blen, bbcp_ENFMT, seqno, Info.Otype, Info.fileid,
                 Info.mode, theSize, Info.atime, Info.mtime, theGrp,
                 filereqn, theUsr, slSep, slXeq);
 
