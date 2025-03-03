@@ -2,6 +2,10 @@
     "files.associations": {
         "bbcp_FileSpec.C": "cpp",
         "bbcp_FileSystem.C": "cpp",
-        "bbcp_FS_Unix.C": "cpp"
+        "bbcp_FS_Unix.C": "cpp",
+        "bbcp_ChkSum.C": "cpp",
+        "bbcp_Config.C": "cpp",
+        "bbcp_MD5.C": "cpp",
+        "bbcp_MD5_openssl.C": "cpp"
     }
 }

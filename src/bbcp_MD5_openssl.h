@@ -32,6 +32,10 @@
 
 typedef unsigned int uint32;
 
+// OpenSSL 3.0 이상에서 MD5 함수 사용을 위한 매크로
+#define OPENSSL_API_COMPAT 0x10100000L
+#define OPENSSL_SUPPRESS_DEPRECATED
+
 /******************************************************************************/
 /*                  M D 5 C o n t e x t   S t r u c t u r e                   */
 /******************************************************************************/
