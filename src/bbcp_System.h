@@ -47,6 +47,14 @@ gid_t      getGID(const char *group);
 //
 char      *getGNM(gid_t gid);
 
+// Convert a user name to a UID return -1 if failed.
+//
+uid_t      getUID(const char *user);
+
+// Convert a UID to a user name return "nobody" if failed.
+//
+char      *getUNM(uid_t uid);
+
 // Get the home directory
 //
 char      *getHomeDir();

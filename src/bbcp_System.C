@@ -132,6 +132,45 @@ char *bbcp_System::getGNM(gid_t gid)
 }
  
 /******************************************************************************/
+/*                                g e t U I D                                 */
+/******************************************************************************/
+
+uid_t bbcp_System::getUID(const char *user)
+{
+   uid_t uid;
+   struct passwd *pp;
+
+// Convert the user name to a uid
+//
+   Glookup.Lock();
+   if ((pp = getpwnam(user))) uid = pp->pw_uid;
+      else uid = (uid_t)-1;
+   Glookup.UnLock();
+   return uid;
+}
+
+/******************************************************************************/
+/*                                g e t U N M                                 */
+/******************************************************************************/
+
+char *bbcp_System::getUNM(uid_t uid)
+{
+   char *unmp;
+   struct passwd *pp;
+
+// Get the user name
+//
+   Glookup.Lock();
+   if ((pp = getpwuid(uid))) unmp = pp->pw_name;
+      else unmp = (char *)"nobody";
+   Glookup.UnLock();
+
+// Return a copy of the user name
+//
+   return strdup(unmp);
+}
+ 
+/******************************************************************************/
 /*                            g e t H o m e D i r                             */
 /******************************************************************************/
   
