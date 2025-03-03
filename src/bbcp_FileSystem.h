@@ -121,6 +121,10 @@ virtual int        RM(const char *path)=0;
 //
 virtual int        setGroup(const char *path, const char *Group)=0;
 
+// Set the user information for a file & return 0. Returns -errno upon error.
+//
+virtual int        setUser(const char *path, const char *User)=0;
+
 // Set the mode on a file & return 0. Returns -errno upon error.
 //
 virtual int        setMode(const char *path, mode_t mode)=0;
