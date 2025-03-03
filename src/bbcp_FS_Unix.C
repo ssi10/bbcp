@@ -70,7 +70,7 @@
 /******************************************************************************/
 
 extern bbcp_System bbcp_OS;
-  
+
 /******************************************************************************/
 /*                            A p p l i c a b l e                             */
 /******************************************************************************/
@@ -276,6 +276,25 @@ int bbcp_FS_Unix::setGroup(const char *path, const char *Group)
 }
 
 /******************************************************************************/
+/*                              s e t U s e r                                */
+/******************************************************************************/
+  
+int bbcp_FS_Unix::setUser(const char *path, const char *User)
+{
+    uid_t uid;
+
+// Convert the user name to a uid
+//
+   if (!User || !User[0]) return 0;
+   uid = bbcp_OS.getUID(User);
+
+// Set the user code and return
+//
+   if (chown(path, uid, (gid_t)-1)) return -errno;
+   return 0;
+}
+
+/******************************************************************************/
 /*                               s e t M o d e                                */
 /******************************************************************************/
   
@@ -387,6 +406,11 @@ int bbcp_FS_Unix::Stat(struct stat &xbuff, bbcp_FileInfo *sbuff)
 //
    if (sbuff->Group) free(sbuff->Group);
    sbuff->Group = bbcp_OS.getGNM(xbuff.st_gid);
+
+// Convert uid to a user name
+//
+   if (sbuff->User) free(sbuff->User);
+   sbuff->User = bbcp_OS.getUNM(xbuff.st_uid);
 
 // All done
 //

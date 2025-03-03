@@ -154,7 +154,7 @@ OBJECT =      \
      $(OBJDIR)/bbcp_ZCX.o \
      $(OBJDIR)/NetLogger.o
 
-TARGET  = $(BINDIR)/bbcp
+TARGET  = $(BINDIR)/fmbbcp
 
 
 all:

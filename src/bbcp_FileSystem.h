@@ -42,12 +42,14 @@ struct bbcp_FileInfo
        time_t    mtime;     // Modification time
        time_t    ctime;     // Create time
        char     *Group;     // -> Group name
+       char     *User;      // -> User name
        char     *SLink;     // -> Symlink contents
        char      Otype;     // 'd' | 'f' | 'l' | 'p' | '?'
        char      Xtype;     // 'x' | 0
 
-       bbcp_FileInfo() : Group(0), SLink(0), Otype('?'), Xtype(0) {}
+       bbcp_FileInfo() : Group(0), User(0), SLink(0), Otype('?'), Xtype(0) {}
       ~bbcp_FileInfo() {if (Group) free(Group);
+                        if (User) free(User);
                         if (SLink) free(SLink);
                        }
 };
@@ -118,6 +120,10 @@ virtual int        RM(const char *path)=0;
 // Set the group information for a file & return 0. Returns -errno upon error.
 //
 virtual int        setGroup(const char *path, const char *Group)=0;
+
+// Set the user information for a file & return 0. Returns -errno upon error.
+//
+virtual int        setUser(const char *path, const char *User)=0;
 
 // Set the mode on a file & return 0. Returns -errno upon error.
 //

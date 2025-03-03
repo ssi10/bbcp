@@ -35,6 +35,13 @@
 
 #include <exception>
 
+// C++11 이상에서는 noexcept를, 이전 버전에서는 throw()를 사용
+#if __cplusplus >= 201103L
+#define BBCP_NOEXCEPT noexcept
+#else
+#define BBCP_NOEXCEPT throw()
+#endif
+
 class bbcp_CondVar
 {
 public:
@@ -62,7 +69,8 @@ inline void  UnLock()         {pthread_mutex_unlock(&cmut);}
                      pthread_mutex_init(&cmut, NULL);
                      relMutex = relm;
                     }
-     ~bbcp_CondVar() {pthread_cond_destroy(&cvar);
+     ~bbcp_CondVar() BBCP_NOEXCEPT {
+                      pthread_cond_destroy(&cvar);
                       pthread_mutex_destroy(&cmut);
                      }
 private:
@@ -86,7 +94,7 @@ inline void   Lock() {pthread_mutex_lock(&cs);}
 inline void UnLock() {pthread_mutex_unlock(&cs);}
 
         bbcp_Mutex() {pthread_mutex_init(&cs, NULL);}
-       ~bbcp_Mutex() {pthread_mutex_destroy(&cs);}
+       ~bbcp_Mutex() BBCP_NOEXCEPT {pthread_mutex_destroy(&cs);}
 
 private:
 
@@ -103,7 +111,7 @@ void    UnLock() {if (monMutex) {monMutex->UnLock(); monMutex = 0;}}
                      {theMutex->Lock();}
         bbcp_MutexMon(bbcp_Mutex &theMutex) : monMutex(&theMutex)
                      {theMutex. Lock();}
-       ~bbcp_MutexMon() {if (monMutex) {monMutex->UnLock(); monMutex = 0;}}
+       ~bbcp_MutexMon() BBCP_NOEXCEPT {if (monMutex) {monMutex->UnLock(); monMutex = 0;}}
 
 private:
 bbcp_Mutex *monMutex;
@@ -121,7 +129,7 @@ public:
        void Wait();
 
   bbcp_Semaphore(int semval=1) : semVar(0), semVal(semval), semWait(0) {}
- ~bbcp_Semaphore() {}
+ ~bbcp_Semaphore() BBCP_NOEXCEPT {}
 
 private:
 
@@ -158,8 +166,8 @@ inline void Wait() {int rc;
   bbcp_Semaphore(int semval=1) {if (sem_init(&h_semaphore, 0, semval))
                                    {throw "sem_init() failed", errno;}
                                }
- ~bbcp_Semaphore() throw(std::exception) {if (sem_destroy(&h_semaphore))
-                       {throw "sem_destroy() failed", errno;}
+ ~bbcp_Semaphore() BBCP_NOEXCEPT {
+                       sem_destroy(&h_semaphore);
                    }
 
 private:

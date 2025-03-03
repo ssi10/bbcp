@@ -53,11 +53,11 @@ extern bbcp_Config   bbcp_Cfg;
 /*                     L o c a l   D e f i n i t i o n s                      */
 /******************************************************************************/
 
-// <seqno> <fnode> <inode> <mode> <size> <acctime> <modtime> <group> <fname>
+// <seqno> <fnode> <inode> <mode> <size> <acctime> <modtime> <group> <user> <fname>
 //
-#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s%s%s\n"
-#define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %2054s"
-#define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %2054s"
+#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s %s %s%s\n"
+#define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %31s %2054s"
+#define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %31s %2054s"
 
 #define SpaceAlt 0x1a
 
@@ -265,20 +265,20 @@ int bbcp_FileSpec::Create_Path()
 int bbcp_FileSpec::Decode(char *buff, char *xName)
 {
    static const char LwrCase = 0x20;
-   char gnbuff[64], *Space;
+   char gnbuff[64], unbuff[64], *Space;
    char fnbuff[2056], *fmt = (char *)bbcp_DEFMT;
    int xtry=1, n;
 
 // Decode the specification
 //
    do {n = sscanf(buff, fmt, &seqno, &Info.Otype, &Info.fileid, &Info.mode,
-                  &Info.size, &Info.atime, &Info.mtime, gnbuff, fnbuff);
+                  &Info.size, &Info.atime, &Info.mtime, gnbuff, unbuff, fnbuff);
        fmt = (char *)bbcp_DEGMT;
-      } while(xtry-- && n != 9);
+      } while(xtry-- && n != 10);
 
 // Make sure it is correct
 //
-   if (n != 9) 
+   if (n != 10) 
       {sprintf(fnbuff,"Unable to decode item %d in file specification from",n+1);
        return bbcp_Fmsg("Decode", fnbuff, (xName ? xName : hostname));
       }
@@ -296,9 +296,15 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
    if (Info.Group) free(Info.Group);
    Info.Group = strdup(gnbuff);
 
-// Apply space conversion to the group name
+   // Apply space conversion to the group name
 //
    while((Space = index(Info.Group, SpaceAlt))) *Space++ = ' ';
+
+   // Handle user name
+   if (Info.User) free(Info.User);
+   Info.User = strdup(unbuff);
+   Space = Info.User;
+   while((Space = index(Space, SpaceAlt))) *Space++ = ' ';
 
 // Check if we need to reconvert the file specification by replacing alternate
 // space characters with actual spaces.
@@ -323,7 +329,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 {
    static const char UprCase = 0xdf;
    const char *slSep, *slXeq;
-   char grpBuff[64], *Space, *theGrp, Otype = Info.Otype;
+   char grpBuff[64], usrBuff[64], *Space, *theGrp, *theUsr;
    long long theSize;
    bool isSL = Info.SLink != 0;
    int n;
@@ -334,7 +340,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 // operation.
 //
    if ((Space = index(filename, ' ')))
-      {filereqn = fspec2 = strdup(filename); Otype &= UprCase;
+      {filereqn = fspec2 = strdup(filename); Info.Otype &= UprCase;
        Space = filereqn + (Space - filename);
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
@@ -342,7 +348,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 // If we have symlink data then we need to encode spaces there as well
 //
    if (isSL && (Space = index(Info.SLink, ' ')))
-      {Otype &= UprCase;
+      {Info.Otype &= UprCase;
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
 
@@ -355,6 +361,15 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
        theGrp = grpBuff;
       } else theGrp = Info.Group;
 
+// Convert spaces in the user name to an alternate character
+//
+   if ((Space = index(Info.User, ' ')))
+      {strncpy(usrBuff, Info.User, sizeof(usrBuff)-1);
+       usrBuff[sizeof(usrBuff)-1] = 0;
+       while((Space = index(usrBuff, ' '))) *Space++ = SpaceAlt;
+       theUsr = usrBuff;
+      } else theUsr = Info.User;
+
 // Prepare for format
 //
    if (isSL) {slXeq = Info.SLink; slSep = ":"; theSize = strlen(filereqn);}
@@ -362,9 +377,9 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 
 // Format the specification
 //
-   n = snprintf(buff, blen, bbcp_ENFMT, seqno, Otype, Info.fileid,
+   n = snprintf(buff, blen, bbcp_ENFMT, seqno, Info.Otype, Info.fileid,
                 Info.mode, theSize, Info.atime, Info.mtime, theGrp,
-                filereqn, slSep, slXeq);
+                theUsr, filereqn, slSep, slXeq);
 
 // Make sure all went well
 //
@@ -419,6 +434,7 @@ bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
       //
       if (fInfo.SLink) {free(fInfo.SLink); fInfo.SLink = 0;}
       if (fInfo.Group) {free(fInfo.Group); fInfo.Group = 0;}
+      if (fInfo.User) {free(fInfo.User); fInfo.User = 0;}
 
       // Ignore entries we can't stat for any reason
       //
@@ -466,7 +482,7 @@ bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
       newp->pathname = strdup(absolute_name);
       newp->targetsz = 0;
       newp->seqno = lastp->seqno + 1;
-      newp->Info = fInfo; fInfo.Group = 0; fInfo.SLink = 0;
+      newp->Info = fInfo; fInfo.Group = 0; fInfo.SLink = 0; fInfo.User = 0;
       newp->FSp = FSp;
       newp->next = NULL;
       lastp->next = newp;
@@ -622,6 +638,11 @@ int bbcp_FileSpec::setStat(mode_t Mode)
 //
    if (!(bbcp_Cfg.Options & bbcp_PTONLY) && Info.Group)
       FSp->setGroup (targpath, Info.Group);
+
+// Set the user only if this is a plain preserve
+//
+   if (!(bbcp_Cfg.Options & bbcp_PTONLY) && Info.User)
+      FSp->setUser (targpath, Info.User);
 
 // Check if any errors occured (we ignore these just like cp/scp does)
 //
