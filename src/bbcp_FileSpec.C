@@ -53,9 +53,9 @@ extern bbcp_Config   bbcp_Cfg;
 /*                     L o c a l   D e f i n i t i o n s                      */
 /******************************************************************************/
 
-// <seqno> <fnode> <inode> <mode> <size> <acctime> <modtime> <group> <fname>
+// <seqno> <fnode> <inode> <mode> <size> <acctime> <modtime> <group> <user> <fname>
 //
-#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s %s%s%s\n"
+#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s %s %s%s\n"
 #define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %31s %2054s"
 #define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %31s %2054s"
 
@@ -265,20 +265,20 @@ int bbcp_FileSpec::Create_Path()
 int bbcp_FileSpec::Decode(char *buff, char *xName)
 {
    static const char LwrCase = 0x20;
-   char gnbuff[64], *Space;
+   char gnbuff[64], unbuff[64], *Space;
    char fnbuff[2056], *fmt = (char *)bbcp_DEFMT;
    int xtry=1, n;
 
 // Decode the specification
 //
    do {n = sscanf(buff, fmt, &seqno, &Info.Otype, &Info.fileid, &Info.mode,
-                  &Info.size, &Info.atime, &Info.mtime, gnbuff, fnbuff);
+                  &Info.size, &Info.atime, &Info.mtime, gnbuff, unbuff, fnbuff);
        fmt = (char *)bbcp_DEGMT;
-      } while(xtry-- && n != 9);
+      } while(xtry-- && n != 10);
 
 // Make sure it is correct
 //
-   if (n != 9) 
+   if (n != 10) 
       {sprintf(fnbuff,"Unable to decode item %d in file specification from",n+1);
        return bbcp_Fmsg("Decode", fnbuff, (xName ? xName : hostname));
       }
@@ -300,9 +300,9 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
 //
    while((Space = index(Info.Group, SpaceAlt))) *Space++ = ' ';
 
-   // Handle user name similarly to group name
+   // Handle user name
    if (Info.User) free(Info.User);
-   Info.User = strdup(gnbuff);
+   Info.User = strdup(unbuff);
    Space = Info.User;
    while((Space = index(Space, SpaceAlt))) *Space++ = ' ';
 
@@ -379,7 +379,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 //
    n = snprintf(buff, blen, bbcp_ENFMT, seqno, Info.Otype, Info.fileid,
                 Info.mode, theSize, Info.atime, Info.mtime, theGrp,
-                filereqn, theUsr, slSep, slXeq);
+                theUsr, filereqn, slSep, slXeq);
 
 // Make sure all went well
 //
