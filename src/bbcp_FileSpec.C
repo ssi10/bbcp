@@ -329,7 +329,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 {
    static const char UprCase = 0xdf;
    const char *slSep, *slXeq;
-   char grpBuff[64], usrBuff[64], *Space, *theGrp, *theUsr;
+   char grpBuff[64], usrBuff[64], *Space, *theGrp, *theUsr, Otype = Info.Otype;
    long long theSize;
    bool isSL = Info.SLink != 0;
    int n;
@@ -340,7 +340,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 // operation.
 //
    if ((Space = index(filename, ' ')))
-      {filereqn = fspec2 = strdup(filename); Info.Otype &= UprCase;
+      {filereqn = fspec2 = strdup(filename); Otype &= UprCase;
        Space = filereqn + (Space - filename);
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
@@ -348,7 +348,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 // If we have symlink data then we need to encode spaces there as well
 //
    if (isSL && (Space = index(Info.SLink, ' ')))
-      {Info.Otype &= UprCase;
+      {Otype &= UprCase;
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
 
@@ -377,7 +377,7 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 
 // Format the specification
 //
-   n = snprintf(buff, blen, bbcp_ENFMT, seqno, Info.Otype, Info.fileid,
+   n = snprintf(buff, blen, bbcp_ENFMT, seqno, Otype, Info.fileid,
                 Info.mode, theSize, Info.atime, Info.mtime, theGrp,
                 theUsr, filereqn, slSep, slXeq);
 
